@@ -1,0 +1,18 @@
+// export {}
+
+declare module "*.svg" {
+  const value: string;
+  export default value;
+}
+
+declare module '*.png' {
+  const value: string;
+  export default value;
+}
+
+declare module '*.jpg' {
+  const value: string;
+  export default value;
+}
+declare module '*.sass';
+declare module '*.woff2';
