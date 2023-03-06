@@ -1,148 +1,154 @@
-import { FilterAlt } from "@mui/icons-material";
-import { Box, Button, ButtonProps, CircularProgress, IconButton, Paper, Popper, PopperProps, TextField, Typography } from "@mui/material";
 import React from "react";
-import { ComponentType } from "react";
 import { theme } from "../../global/theme";
-import { ISuperOption, ISuperOptionProps, SuperOptions } from "./SuperOptions/SuperOptions";
-import { CUSTOM_PROPS } from "./customProps";
-
-interface SuperFilterProps {
-    title?: string,
-    OpenBtnComponent?: ComponentType<ButtonProps>,
-    PoperComponent?: ComponentType<PopperProps>,
-    options: ISuperOption[],
-    disableSearch?: boolean,
-    size?: 'small' | 'medium' | 'large',
-    optionsParams?: ISuperOptionProps["optionsParams"]
-}
-
-interface SuperFilterState {
-    isPopperOpen: boolean
-    anchorEl: PopperProps['anchorEl'],
-    search: string,
-    options: ISuperOption[] | null,
-    isOptionListRendered: boolean
-}
+import { FilterAlt } from "@mui/icons-material";
+import { Box, Button, IconButton, Typography } from "@mui/material";
+import { SuperOptions } from "./SuperOptions/SuperOptions";
+import { SuperFilterProps, SuperFilterState } from "./SuperFilter.def";
+import { ButtonWrapperStyled, PopperInnerStyled, PopperStyled, TitleWrapperStyled } from "./SuperFilter.styles";
+import { SuperSearch } from "./SuperSearch/SuperSearch";
 
 export function SuperFilter(props: SuperFilterProps) {
+	const { OpenBtnComponent, PoperComponent, InputComponent, options, title, disableSearch, size, optionsParams } =
+		props;
 
-    const { OpenBtnComponent, PoperComponent, options, title, disableSearch, size, optionsParams } = props
+	const [state, setState] = React.useState({
+		isPopperOpen: false,
+		anchorEl: null,
+		search: "",
+		options: options,
+		isOptionListRendered: false,
+	} as SuperFilterState);
 
-    const [state, setState] = React.useState({
-        isPopperOpen: false,
-        anchorEl: null,
-        search: "",
-        options: options,
-        isOptionListRendered: false
-    } as SuperFilterState)
+	const ANCHOR_EL_REF = React.createRef<HTMLButtonElement>();
 
-    const targetSize: SuperFilterProps["size"] = size || "small"
-    const anchorElRef = React.createRef<HTMLButtonElement>()
+	const TargetOpenBtn = OpenBtnComponent || IconButton;
+	const TargetInputComponent = InputComponent || SuperSearch;
+	const TargetPopper = PoperComponent || PopperStyled;
 
-    const TargetOpenBtn = OpenBtnComponent || IconButton
-    const TargetPopper = PoperComponent || Popper
+	const POPPER_HEIGHT = `calc(100vh 
+		- ${(state.anchorEl as HTMLElement)?.offsetHeight + (state.anchorEl as HTMLElement)?.offsetTop}px
+		- ${theme.spacing(1)})`;
 
-    let timeout: NodeJS.Timeout
+	let timeout: NodeJS.Timeout;
 
-    // React.useEffect(() => {
-    //     setTimeout(() => setState(prevState => ({
-    //         ...prevState,
-    //         options: options
-    //     })), 10000)
-    // }, [])
+	const LOADING_OPTIONS = state.options == null || !state.isOptionListRendered;
 
-    function setAnchorEl(HTMLElement: EventTarget & HTMLElement) {
-        setState(prevState => ({
-            ...prevState,
-            anchorEl: HTMLElement
-        }))
-    }
+	// React.useEffect(() => {
+	//     setTimeout(() => setState(prevState => ({
+	//         ...prevState,
+	//         options: options
+	//     })), 5000)
+	// }, [])
 
-    function switchIsPopperOpen() {
-        setState(prevState => ({
-            ...prevState,
-            isPopperOpen: !prevState.isPopperOpen
-        }))
-    }
+	React.useEffect(() => {
+		return () =>  {
+			state.isPopperOpen && cleanUp();
+		}
+	}, [state.isPopperOpen]);
 
-    function updateSearchValue(value: string) {
-        console.log('asda')
-        clearTimeout(timeout)
-        timeout = setTimeout(() => getFilteredOptions(value), 500)
-    }
+	function setAnchorEl(HTMLElement: EventTarget & HTMLElement) {
+		setState(prevState => ({
+			...prevState,
+			anchorEl: HTMLElement,
+		}));
+	}
 
-    function getFilteredOptions(searchValue: string) {
-        setState(prevState => ({
-            ...prevState,
-            options: searchValue == "" ? options : options.filter(option => option.label.toLowerCase().includes(searchValue.toLowerCase()))
-        }))
-    }
+	function switchIsPopperOpen() {
+		setState(prevState => ({
+			...prevState,
+			isPopperOpen: !prevState.isPopperOpen,
+		}));
+	}
 
-    function getIsOptionListRendered (isRendered: boolean) {
-        setState(prevState => ({
-            ...prevState,
-            isOptionListRendered: isRendered
-        }))
-    }
+	function updateSearchValue(value: string) {
+		console.log("asda");
+		clearTimeout(timeout);
+		timeout = setTimeout(() => getFilteredOptions(value), 500);
+	}
 
-    return (
-        <Box ref={anchorElRef} onClick={(e) => setAnchorEl(e.currentTarget)}>
-            <Box display="flex" alignItems={"center"} width="100%" padding={theme.spacing(1, 1)}>
-                <Typography variant="body1">
-                    {title}
-                </Typography>
-                <TargetOpenBtn
-                    onClick={switchIsPopperOpen}
-                >
-                    {!OpenBtnComponent && <FilterAlt />}
-                </TargetOpenBtn>
-            </Box>
+	function getFilteredOptions(searchValue: string) {
+		setState(prevState => ({
+			...prevState,
+			options:
+				searchValue == ""
+					? options
+					: options.filter(option => option.label.toLowerCase().includes(searchValue.toLowerCase())),
+		}));
+	}
 
-            <TargetPopper
-                open={state.isPopperOpen}
-                anchorEl={state.anchorEl}
-                placement="bottom"
-                sx={{
-                    height: `calc(100vh - ${(state.anchorEl as HTMLElement)?.offsetHeight + (state.anchorEl as HTMLElement)?.offsetTop}px - ${theme.spacing(1)})`,
-                    borderRadius: 1
-                }}
-            >
-                <Paper
-                    elevation={3}
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        minWidth: 250,
-                        height: "100%",
-                        p: 2
-                    }}
-                >
-                    {!disableSearch &&
-                        <TextField
-                            disabled={!state.isOptionListRendered}
-                            size={targetSize == "large" ? "medium" : targetSize}
-                            sx={{
-                                position: "static",
-                                top: 0,
-                            }}
-                            onChange={(e) => updateSearchValue(e.target.value)}
-                        />
-                    }
-                    <Box
-                        sx={{
-                            height: "100%",
-                            overflow: "auto",
-                            marginY: 2
-                        }}
-                    >
-                        <SuperOptions getIsOptionListRendered={getIsOptionListRendered} optionsParams={optionsParams} options={state.options} />
-                    </Box>
-                    <Box display="flex" justifyContent={"space-between"} gap={2}>
-                        <Button {...{ ...CUSTOM_PROPS.button, size: targetSize }}>Применить</Button>
-                        <Button  {...{ ...CUSTOM_PROPS.button, size: targetSize }}>Отменить</Button>
-                    </Box>
-                </Paper>
-            </TargetPopper>
-        </Box>
-    )
+	function getIsOptionListRendered(isRendered: boolean) {
+		setState(prevState => ({
+			...prevState,
+			isOptionListRendered: isRendered,
+		}));
+	}
+
+	function cleanUp() {
+		setState(prevState => ({
+			...prevState,
+			isOptionListRendered: false,
+			search: "",
+		}));
+	}
+
+	return (
+		<Box
+			ref={ANCHOR_EL_REF}
+			onClick={e => setAnchorEl(e.currentTarget)}
+		>
+			<TitleWrapperStyled>
+				<Typography
+					variant={"body1"}
+					mr={2}
+				>
+					{title}
+				</Typography>
+				<TargetOpenBtn onClick={switchIsPopperOpen}>{!OpenBtnComponent && <FilterAlt />}</TargetOpenBtn>
+			</TitleWrapperStyled>
+
+			<TargetPopper
+				open={state.isPopperOpen}
+				anchorEl={state.anchorEl}
+				sx={{
+					height: POPPER_HEIGHT,
+				}}
+			>
+				<PopperInnerStyled
+					sx={{
+						pointerEvents: LOADING_OPTIONS ? "none" : "auto"
+					}}
+				>
+					{!disableSearch && (
+						<TargetInputComponent
+							disabled={LOADING_OPTIONS}
+							onChange={e => updateSearchValue(e.target.value)}
+						/>
+					)}
+
+					<SuperOptions
+						getIsOptionListRendered={getIsOptionListRendered}
+						optionsParams={optionsParams}
+						options={state.options}
+					/>
+
+					<ButtonWrapperStyled>
+						<Button
+							disabled={LOADING_OPTIONS}
+							variant={"contained"}
+							size={"medium"}
+						>
+							Применить
+						</Button>
+						<Button
+							disabled={LOADING_OPTIONS}
+							variant={"contained"}
+							size={"medium"}
+						>
+							Отменить
+						</Button>
+					</ButtonWrapperStyled>
+				</PopperInnerStyled>
+			</TargetPopper>
+		</Box>
+	);
 }

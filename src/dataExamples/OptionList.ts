@@ -1,4 +1,4 @@
-import { ISuperOption } from "../components/Filters/SuperOptions/SuperOptions";
+import { ISuperOption } from "../components/Filters/SuperOptions/SuperOptions.def";
 
 function makeid(length: number) {
     let result = '';
