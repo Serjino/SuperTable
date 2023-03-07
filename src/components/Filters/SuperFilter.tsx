@@ -112,6 +112,7 @@ export function SuperFilter(props: SuperFilterProps) {
 				sx={{
 					height: POPPER_HEIGHT,
 				}}
+				onClick={e => e.stopPropagation()}
 			>
 				<PopperInnerStyled
 					sx={{

@@ -14,16 +14,6 @@ export function FiltersPage() {
 				// title="Простой фильтр"
 				options={OPTIONS}
 			/>
-			<SuperFilter
-				key={2}
-				// title="Простой фильтр"
-				options={OPTIONS}
-			/>
-			<SuperFilter
-				key={3}
-				// title="Простой фильтр"
-				options={OPTIONS}
-			/>
 		</Box>
 	);
 }

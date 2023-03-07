@@ -1,6 +1,7 @@
 export interface ISuperOption {
     label: string,
     value: string,
+    checked: boolean
     [key: string]: any
 }
 
